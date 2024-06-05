@@ -38,6 +38,8 @@ public: // メンバ関数
 	/// </summary>
 	void AdjustEnemyDifficulty();
 
+	void AdjustPowerUpSpawnRate();
+	void AdjustEnemyAI();
 
 	/// <summary>
 	/// 毎フレーム処理
@@ -75,4 +77,8 @@ private: // メンバ変数
 	Enemy* enemy_ = nullptr;
 	// 天球
 	Skydome* skydome_ = nullptr;
+
+	float enemySpawnRate_;
+	float powerUpSpawnRate_;
+	int32_t level;
 };

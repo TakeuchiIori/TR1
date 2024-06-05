@@ -6,7 +6,7 @@
 #include "Vector2.h"
 #include <cassert>
 
-GameScene::GameScene() {}
+GameScene::GameScene() : player_(nullptr), enemy_(nullptr), enemySpawnRate_(1.0f), powerUpSpawnRate_(1.0f),level(0) {}
 
 GameScene::~GameScene() {
 	delete model_;
@@ -146,21 +146,55 @@ void GameScene::AdjustEnemyDifficulty() {
 		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 1.5));
 	}
 	else if (playerHealth > 50) {
-		
 		enemy_->SetAttackPower(enemy_->GetBaseAttackPower());
 	}
 	else if(playerHealth > 30){
-		
 		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 0.75));
 	}
 	else {
 		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 0.5));
 	}
-
-
-
 }
 
+void GameScene::AdjustPowerUpSpawnRate() {
+	if (!player_) return;
+
+	int32_t playerHealth = player_->GetHealth();
+	if (playerHealth > 75) {
+		powerUpSpawnRate_ = 0.5f;
+	}
+	else if (playerHealth > 50) {
+		powerUpSpawnRate_ = 0.75f;
+	}
+	else if (playerHealth > 30) {
+		powerUpSpawnRate_ = 1.0f;
+	}
+	else {
+		powerUpSpawnRate_ = 1.5f;
+	}
+}
+
+void GameScene::AdjustEnemyAI() {
+	if (!player_ || !enemy_) return;
+
+	int32_t playerHealth = player_->GetHealth();
+	if (playerHealth > 75) {
+		level = 3;
+		enemy_->SetAILevel(level);
+	}
+	else if (playerHealth > 50) {
+		level = 2;
+		enemy_->SetAILevel(level);
+	}
+	else if (playerHealth > 30) {
+		level = 1;
+		enemy_->SetAILevel(level);
+	}
+	else {
+		level = 0;
+		enemy_->SetAILevel(level);
+	}
+}
 
 void GameScene::Update() { 
 #ifdef _DEBUG
@@ -186,8 +220,11 @@ void GameScene::Update() {
 	}
 	CheackAllCollisions();
 	skydome_->Update();
-	// 敵の難易度を調整
+	// 敵の難易度を調整する関数
 	AdjustEnemyDifficulty();
+	//AdjustEnemySpawnRate();
+	AdjustPowerUpSpawnRate();
+	AdjustEnemyAI();
 
 	int32_t playerHealth = player_->GetHealth(); // プレイヤーのHPを取得
 	int32_t enemyHealth = enemy_->GetHealth(); // 敵のHPを取得
@@ -201,12 +238,13 @@ void GameScene::Update() {
 	if (ImGui::TreeNode("Enemy")) {
 		// 敵の情報を表示
 		if (enemy_) {
+			ImGui::Text("AI Level : %d", level);
 			ImGui::SliderInt("Enemy Health ", &enemyHealth,0,100);
 			enemy_->SetHealth(enemyHealth);
-			ImGui::Text("Enemy BaseAttack Power: %d", enemy_->GetBaseAttackPower());
 			ImGui::Text("Enemy Attack Power: %d", enemy_->GetAttackPower());
+			ImGui::Text("EnemySpeed : % f", enemy_->GetkLeaveSpeed().x);
 			ImGui::Text("HitEnemy : %f", enemy_->GetHitEnemy());
-			ImGui::Text("Timer : %d", enemy_->GetEnemyDeathTimer());
+			ImGui::Text("DeathTimer : %d", enemy_->GetEnemyDeathTimer());
 		}
 		ImGui::TreePop();
 	}

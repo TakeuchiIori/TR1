@@ -75,11 +75,13 @@ public:
 	// ワールド座標を取得
 	Vector3 GetWorldPosition();
 
+	
+
 	void TakeDamage(int damage);
 public: // アクセッサ
 	void SetHealth(int32_t health);
 	void SetAttackPower(int32_t power);
-	void SetMovementSpeed(float speed);
+	void SetMovementSpeed(Vector3 speed);
 	void SetAttackFrequency(float frequency);
 	void SetAILevel(int32_t level);
 	
@@ -94,8 +96,11 @@ public: // アクセッサ
 	float Setradius() { return rad; }
 	float GetHitEnemy() { return hitEnemy; }
 	
+	Vector3 GetkLeaveSpeed() const { return kLeaveSpeed; }
+	Vector3 SetWorldPosition(Vector3 pos) { worldTransform_.translation_ = pos; };
+	void SetkLeaveSpeed(Vector3 speed) { kLeaveSpeed = speed; }
 	
-	bool isDraw_ = true;
+	
 private:
 	// ワールドトランスフォーム
 	WorldTransform worldTransform_;
@@ -111,25 +116,27 @@ private:
 	Player* player_ = nullptr;
 	
 	Vector3 kApprochSpeed = {0.0f, 0.0f, -0.05f};
-	Vector3 kLeaveSpeed = {0.0f, 0.0f, 0.0f}; //{-0.1f, 0.1f, 0.0f};
+	Vector3 kLeaveSpeed = {0.2f, 0.0f, 0.0f}; 
 	// 半径
 	float rad = 1.0f;
 	float hitEnemy = 0.0f;
+	float kBulletSpeed;
+	float attackTimer_;
 	// 敵のステータス
-	//int health_ = 100;
-	//int attackPower_ = 10;
-	//const int baseHealth_ = 100;
-	//const int baseAttackPower_ = 10;
 
 	int32_t baseAttackPower_;
 	int32_t attackPower_;
-	float movementSpeed_;
+	//Vector3 movementSpeed_;
 	float attackFrequency_;
 	int32_t baseHealth_;
 	int32_t health_;
 	int32_t aiLevel_;
 	
 	int32_t isAlive_ = 0;
+	bool isDraw_ = true;
+	bool isMove_ = false;
+	// 移動方向を示すフラグを追加
+	bool movingRight_ = true;
 	
 private: //メンバ関数ポインタ
 	// 発射タイマー
