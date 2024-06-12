@@ -5,7 +5,11 @@
 #include "TextureManager.h"
 #include "Vector2.h"
 #include <cassert>
-
+#include <thread>
+#include <chrono>
+//#include <dlib/matrix.h>
+//#include <dlib/matrix/matrix_assign.h>
+#include <vector>
 GameScene::GameScene() : player_(nullptr), enemy_(nullptr), enemySpawnRate_(1.0f), powerUpSpawnRate_(1.0f),level(0) {}
 
 GameScene::~GameScene() {
@@ -65,136 +69,6 @@ void GameScene::Initialize() {
 
 }
 
-void GameScene::CheackAllCollisions() {
-	// 判定対象とAとBの座標
-	Vector3 posA, posB;
-	// 自弾リストの取得
-	const list<PlayerBullet*>& playerBullets = player_->GetBullets();
-	// 敵弾リストの取得
-	const list<EnemyBullet*>& enemyBullets = enemy_->GetBullets();
-	//==================== 自キャラと敵弾の当たり判定 ====================//
-#pragma region
-	// 自キャラの座標
-	posA = player_->GetWroldPosition();
-	// 自キャラと敵弾全ての当たり判定
-	for (EnemyBullet* bullet : enemyBullets) {
-		// 敵弾の座標d
-		posB = bullet->GetWaroldPosition();
-		// 座標の距離を求める
-		// 座標の距離を求める
-		float distance = float(std::sqrt(std::pow(posA.x - posB.x, 2) + std::pow(posA.y - posB.y, 2) + std::pow(posA.z - posB.z, 2)));
-		float radDistance = player_->Setradius() + bullet->Setradius();
-		// 球と球の交差判定
-		if (distance <= radDistance) {
-			// 自キャラの衝突時コールバック関数を呼び出す
-			player_->OnCollision();
-			bullet->OnCollision();
-		}
-	}
-#pragma endregion
-	//==================== 自弾と敵弾キャラの当たり判定 ====================//
-#pragma region
-	// 敵キャラの座標
-	posA = enemy_->GetWorldPosition();
-	// 敵キャラと自弾全ての当たり判定
-		for (PlayerBullet* bullet : playerBullets) {
-			// 自弾の座標
-			posB = bullet->GetWroldPosition();
-			// 座標の距離を求める
-			float distance = float(std::sqrt(std::pow(posA.x - posB.x, 2) + std::pow(posA.y - posB.y, 2) + std::pow(posA.z - posB.z, 2)));
-			float radDistance = enemy_->Setradius() + bullet->Setradius();
-			// 球と球の交差判定
-			if (distance <= radDistance) {
-				// 敵キャラの衝突時コールバック関数を呼び出す
-				enemy_->OnCollision();
-				bullet->OnCollision();
-			}
-		}
-	
-#pragma endregion
-	//==================== 自弾と敵弾の当たり判定 ====================//
-#pragma region
-	// 敵キャラと自弾全ての当たり判定
-	for (PlayerBullet* playerbullet : playerBullets) {
-		for (EnemyBullet* enemybullet : enemyBullets) {
-			// 自弾の座標
-			posA = enemybullet->GetWaroldPosition();
-			// 自弾の座標
-			posB = playerbullet->GetWroldPosition();
-			// 座標の距離を求める
-			float distance = float(std::sqrt(std::pow(posA.x - posB.x, 2) + std::pow(posA.y - posB.y, 2) + std::pow(posA.z - posB.z, 2)));
-			float radDistance = playerbullet->Setradius() + enemybullet->Setradius();
-			// 球と球の交差判定
-			if (distance <= radDistance) {
-				// 敵キャラの衝突時コールバック関数を呼び出す
-				playerbullet->OnCollision();
-				enemybullet->OnCollision();
-			}
-		}
-	}
-#pragma endregion
-}
-
-void GameScene::AdjustEnemyDifficulty() {
-	if (player_ == nullptr || enemy_ == nullptr) return;
-
-	int32_t playerHealth = player_->GetHealth(); // プレイヤーのHPを取得
-	//int32_t enemyHealth = enemy_->GetHealth(); // 敵のHPを取得
-	
-	if (playerHealth > 75) {
-		// プレイヤーのHPが75以上の場合、敵の強さを増加
-		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 1.5));
-	}
-	else if (playerHealth > 50) {
-		enemy_->SetAttackPower(enemy_->GetBaseAttackPower());
-	}
-	else if(playerHealth > 30){
-		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 0.75));
-	}
-	else {
-		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 0.5));
-	}
-}
-
-void GameScene::AdjustPowerUpSpawnRate() {
-	if (!player_) return;
-
-	int32_t playerHealth = player_->GetHealth();
-	if (playerHealth > 75) {
-		powerUpSpawnRate_ = 0.5f;
-	}
-	else if (playerHealth > 50) {
-		powerUpSpawnRate_ = 0.75f;
-	}
-	else if (playerHealth > 30) {
-		powerUpSpawnRate_ = 1.0f;
-	}
-	else {
-		powerUpSpawnRate_ = 1.5f;
-	}
-}
-
-void GameScene::AdjustEnemyAI() {
-	if (!player_ || !enemy_) return;
-
-	int32_t playerHealth = player_->GetHealth();
-	if (playerHealth > 75) {
-		level = 3;
-		enemy_->SetAILevel(level);
-	}
-	else if (playerHealth > 50) {
-		level = 2;
-		enemy_->SetAILevel(level);
-	}
-	else if (playerHealth > 30) {
-		level = 1;
-		enemy_->SetAILevel(level);
-	}
-	else {
-		level = 0;
-		enemy_->SetAILevel(level);
-	}
-}
 
 void GameScene::Update() { 
 #ifdef _DEBUG
@@ -222,16 +96,15 @@ void GameScene::Update() {
 	skydome_->Update();
 	// 敵の難易度を調整する関数
 	AdjustEnemyDifficulty();
-	//AdjustEnemySpawnRate();
-	AdjustPowerUpSpawnRate();
 	AdjustEnemyAI();
-
+	
 	int32_t playerHealth = player_->GetHealth(); // プレイヤーのHPを取得
 	int32_t enemyHealth = enemy_->GetHealth(); // 敵のHPを取得
+
+
+
 	// ImGuiの描画開始
 	ImGui::Begin("Window");
-	
-
 	// プレイヤーの情報を表示
 	ImGui::SliderInt("Player Health", &playerHealth,0,100);
 	player_->SetHealth(playerHealth);
@@ -248,10 +121,6 @@ void GameScene::Update() {
 		}
 		ImGui::TreePop();
 	}
-
-	// 他の情報を表示
-	// 必要に応じて追加情報をここに表示
-
 	ImGui::End();
 
 	// ImGuiの描画終了
@@ -306,4 +175,117 @@ void GameScene::Draw() {
 	Sprite::PostDraw();
 
 #pragma endregion
+}
+
+void GameScene::CheackAllCollisions() {
+	// 判定対象とAとBの座標
+	Vector3 posA, posB;
+	// 自弾リストの取得
+	const list<PlayerBullet*>& playerBullets = player_->GetBullets();
+	// 敵弾リストの取得
+	const list<EnemyBullet*>& enemyBullets = enemy_->GetBullets();
+	//==================== 自キャラと敵弾の当たり判定 ====================//
+#pragma region
+	// 自キャラの座標
+	posA = player_->GetWroldPosition();
+	// 自キャラと敵弾全ての当たり判定
+	for (EnemyBullet* bullet : enemyBullets) {
+		// 敵弾の座標d
+		posB = bullet->GetWaroldPosition();
+		// 座標の距離を求める
+		// 座標の距離を求める
+		float distance = float(std::sqrt(std::pow(posA.x - posB.x, 2) + std::pow(posA.y - posB.y, 2) + std::pow(posA.z - posB.z, 2)));
+		float radDistance = player_->Setradius() + bullet->Setradius();
+		// 球と球の交差判定
+		if (distance <= radDistance) {
+			// 自キャラの衝突時コールバック関数を呼び出す
+			player_->OnCollision();
+			bullet->OnCollision();
+		}
+	}
+#pragma endregion
+	//==================== 自弾と敵弾キャラの当たり判定 ====================//
+#pragma region
+	// 敵キャラの座標
+	posA = enemy_->GetWorldPosition();
+	// 敵キャラと自弾全ての当たり判定
+	for (PlayerBullet* bullet : playerBullets) {
+		// 自弾の座標
+		posB = bullet->GetWroldPosition();
+		// 座標の距離を求める
+		float distance = float(std::sqrt(std::pow(posA.x - posB.x, 2) + std::pow(posA.y - posB.y, 2) + std::pow(posA.z - posB.z, 2)));
+		float radDistance = enemy_->Setradius() + bullet->Setradius();
+		// 球と球の交差判定
+		if (distance <= radDistance) {
+			// 敵キャラの衝突時コールバック関数を呼び出す
+			enemy_->OnCollision();
+			bullet->OnCollision();
+		}
+	}
+
+#pragma endregion
+	//==================== 自弾と敵弾の当たり判定 ====================//
+#pragma region
+	// 敵キャラと自弾全ての当たり判定
+	for (PlayerBullet* playerbullet : playerBullets) {
+		for (EnemyBullet* enemybullet : enemyBullets) {
+			// 自弾の座標
+			posA = enemybullet->GetWaroldPosition();
+			// 自弾の座標
+			posB = playerbullet->GetWroldPosition();
+			// 座標の距離を求める
+			float distance = float(std::sqrt(std::pow(posA.x - posB.x, 2) + std::pow(posA.y - posB.y, 2) + std::pow(posA.z - posB.z, 2)));
+			float radDistance = playerbullet->Setradius() + enemybullet->Setradius();
+			// 球と球の交差判定
+			if (distance <= radDistance) {
+				// 敵キャラの衝突時コールバック関数を呼び出す
+				playerbullet->OnCollision();
+				enemybullet->OnCollision();
+			}
+		}
+	}
+#pragma endregion
+}
+
+void GameScene::AdjustEnemyDifficulty() {
+	if (player_ == nullptr || enemy_ == nullptr) return;
+
+	int32_t playerHealth = player_->GetHealth(); // プレイヤーのHPを取得
+	//int32_t enemyHealth = enemy_->GetHealth(); // 敵のHPを取得
+
+	if (playerHealth > 75) {
+		// プレイヤーのHPが75以上の場合、敵の強さを増加
+		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 1.5));
+	}
+	else if (playerHealth > 50) {
+		enemy_->SetAttackPower(enemy_->GetBaseAttackPower());
+	}
+	else if (playerHealth > 30) {
+		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 0.75));
+	}
+	else {
+		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 0.5));
+	}
+}
+
+void GameScene::AdjustEnemyAI() {
+	if (!player_ || !enemy_) return;
+
+	int32_t playerHealth = player_->GetHealth();
+	if (playerHealth > 75) {
+		level = 3;
+		enemy_->SetAILevel(level);
+	}
+	else if (playerHealth > 50) {
+		level = 2;
+		enemy_->SetAILevel(level);
+	}
+	else if (playerHealth > 30) {
+		level = 1;
+		enemy_->SetAILevel(level);
+	}
+	else {
+		level = 0;
+		enemy_->SetAILevel(level);
+	}
 }

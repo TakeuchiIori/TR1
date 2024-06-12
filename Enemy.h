@@ -63,6 +63,16 @@ public:
 	void Update();
 
 	/// <summary>
+	/// 敵の弾の消去
+	/// </summary>
+	void EnemyBulletDelete();
+
+	/// <summary>
+	/// 敵復活タイマー
+	/// </summary>
+	void EnemyTimer();
+
+	/// <summary>
 	/// 描画
 	/// </summary>
 	void Draw(ViewProjection& viewProjection);
@@ -81,7 +91,7 @@ public:
 public: // アクセッサ
 	void SetHealth(int32_t health);
 	void SetAttackPower(int32_t power);
-	void SetMovementSpeed(Vector3 speed);
+	void SetLeaveSpeed(Vector3 speed);
 	void SetAttackFrequency(float frequency);
 	void SetAILevel(int32_t level);
 	
@@ -95,10 +105,10 @@ public: // アクセッサ
 	
 	float Setradius() { return rad; }
 	float GetHitEnemy() { return hitEnemy; }
-	
-	Vector3 GetkLeaveSpeed() const { return kLeaveSpeed; }
+	float GetBulletSpeed() { return kBulletSpeed; }
+	Vector3 GetkLeaveSpeed()  { return kLeaveSpeed; }
 	Vector3 SetWorldPosition(Vector3 pos) { worldTransform_.translation_ = pos; };
-	void SetkLeaveSpeed(Vector3 speed) { kLeaveSpeed = speed; }
+	
 	
 	
 private:

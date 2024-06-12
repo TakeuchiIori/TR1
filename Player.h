@@ -99,6 +99,7 @@ private: // メンバ変数
 	float rad = 1.0f;
 	// プレイヤーのHPの初期値
 	int32_t health_ = 100;
+	// プレイヤーのステータス
 	int attackPower_ = 10;
 	const int baseHealth_ = 100;
 	const int baseAttackPower_ = 10;

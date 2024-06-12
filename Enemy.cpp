@@ -106,7 +106,7 @@ void Enemy::SetAttackPower(int32_t power) {
     attackPower_ = power;
 }
 
-void Enemy::SetMovementSpeed(Vector3 speed) {
+void Enemy::SetLeaveSpeed(Vector3 speed) {
     kLeaveSpeed = speed;
 }
 
@@ -135,6 +135,11 @@ void Enemy::SetAILevel(int32_t level) {
         kBulletSpeed = 0.5f;
         kFireInterval = 60;
     }
+    else if (level == 0) {
+        kLeaveSpeed.x = 0.0f;
+        kBulletSpeed = 0.25f;
+        kFireInterval = 75;
+    }
 }
 
 void Enemy::Fire() {
@@ -162,6 +167,27 @@ void Enemy::OnCollision() {
 }
 
 void Enemy::Update() {
+    EnemyBulletDelete();
+    // メンバ関数ポインタの呼び出し
+    (this->*phaseEnemy[static_cast<size_t>(phase_)])();
+
+    // 弾の更新
+    for (EnemyBullet* bullet : bullets_) {
+        bullet->Update();
+    }
+    EnemyTimer();
+    // アフィン変換行列の計算
+    Matrix4x4 moveMatrix = MakeAffineMatrix(worldTransform_.scale_, worldTransform_.rotation_, worldTransform_.translation_);
+    // ワールド行列に代入
+    worldTransform_.matWorld_ = moveMatrix;
+    // 行列を定数バッファに転送
+    worldTransform_.Update();
+    // ImGuiの描画開始
+
+}
+
+void Enemy::EnemyBulletDelete()
+{
     // デスフラグの立った弾を削除
     bullets_.remove_if([](EnemyBullet* bullet) {
         if (bullet->IsDead()) {
@@ -170,14 +196,10 @@ void Enemy::Update() {
         }
         return false;
         });
+}
 
-    // メンバ関数ポインタの呼び出し
-    (this->*phaseEnemy[static_cast<size_t>(phase_)])();
-
-    // 弾の更新
-    for (EnemyBullet* bullet : bullets_) {
-        bullet->Update();
-    }
+void Enemy::EnemyTimer()
+{
     //-------- 敵の復活 -------//
     if (!isDraw_) {
         isAlive_++;
@@ -187,19 +209,6 @@ void Enemy::Update() {
         health_ = 100;
         isAlive_ = 0;
     }
-    // アフィン変換行列の計算
-    Matrix4x4 moveMatrix = MakeAffineMatrix(worldTransform_.scale_, worldTransform_.rotation_, worldTransform_.translation_);
-    // ワールド行列に代入
-    worldTransform_.matWorld_ = moveMatrix;
-    // 行列を定数バッファに転送
-    worldTransform_.Update();
-    // ImGuiの描画開始
-    ImGui::Begin("Window");
-
-    ImGui::Text("Enemy.x: %f", worldTransform_.translation_.x);
-    ImGui::Text("Enemy.speed: %f", kLeaveSpeed.x);
-
-    ImGui::End();
 }
 
 void Enemy::Draw(ViewProjection& viewProjection) {

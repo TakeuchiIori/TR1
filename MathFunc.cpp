@@ -39,7 +39,39 @@ Vector3 Cross(const Vector3& v1, const Vector3& v2) {
 
 	return result;
 }
+// 線形補間を行う関数
+float linearInterpolate(float value, float minInput, float maxInput, float minOutput, float maxOutput) {//距離が最小距離より小さい場合は最大速度を、最大距離より大きい場合は最小速度を返し、範囲内の場合は線形補間を適用する。
+	if (value < minInput) {
+		return maxOutput;
+	}
+	else if (value > maxInput) {
+		return minOutput;
+	}
+	else {
+		return maxOutput - (value - minInput) / (maxInput - minInput) * (maxOutput - minOutput);
+	}
+}// 2つの点の距離を計算してVector3型で返す関数
+Vector3 ReturnDistance(const Vector3& point1, const Vector3& point2) {
+	float dx = point2.x - point1.x;
+	float dy = point2.y - point1.y;
+	float dz = point2.z - point1.z;
+	return Vector3{ dx, dy, dz };
+}
+// 距離に基づいて敵の速度を更新する関数
+Vector3 UpdateSpeed(float distance, Vector3& enemySpeed) {
+	// 距離に基づいて敵の速度を線形補間で調整
+	const float minDistance = 1.0f;  // 最小距離
+	const float maxDistance = 20.0f; // 最大距離
+	const float minSpeed = 1.0f;     // 最小速度
+	const float maxSpeed = 5.0f;     // 最大速度
 
+	float speed = linearInterpolate(distance, minDistance, maxDistance, minSpeed, maxSpeed);
+	enemySpeed.x = speed;
+	enemySpeed.y = speed;
+	enemySpeed.z = speed;
+
+	return { speed, speed, speed };
+}
 // ベクトルの内積を計算する関数
 float Dot(const Vector3& a, const Vector3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 // ベクトルの大きさの2乗を計算する関数
@@ -56,7 +88,7 @@ Vector3 normalize(const Vector3& v) {
 	return {v.x / mag, v.y / mag, v.z / mag};
 }
 // ベクトル間の距離を計算する関数
-float distance(const Vector3& a, const Vector3& b) {
+float Distance(const Vector3& a, const Vector3& b) {
 	float dx = b.x - a.x;
 	float dy = b.y - a.y;
 	float dz = b.z - a.z;

@@ -21,6 +21,8 @@ Vector3 Cross(const Vector3& v1, const Vector3& v2);
 float Dot(const Vector3& a, const Vector3& b);
 // ベクトルの大きさの2乗を計算する関数
 float magnitudeSquared(const Vector3& v);
+float linearInterpolate(float value, float minInput, float maxInput, float minOutput, float maxOutput);
+Vector3 UpdateSpeed(float distance, Vector3& enemySpeed);
 // ベクトルの引き算を行う関数
 Vector3 subtract(const Vector3& a, const Vector3& b);
 // ベクトルの掛け算を行う関数
@@ -30,7 +32,8 @@ float magnitude(const Vector3& v);
 // ベクトルの正規化を行う関数
 Vector3 normalize(const Vector3& v);
 // ベクトル間の距離を計算する関数
-float distance(const Vector3& a, const Vector3& b);
+float Distance(const Vector3& a, const Vector3& b);
+Vector3 ReturnDistance(const Vector3& point1, const Vector3& point2);
 // radianに変換
 float Degree(float& degree);
 // 1. 行列の加法 
