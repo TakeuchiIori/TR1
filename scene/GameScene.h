@@ -49,6 +49,7 @@ public: // メンバ関数
 	/// </summary>
 	void Draw();
 
+	Vector3 calculateEnemySpeed(const Vector3& playerPos, const Vector3& enemyPos);
 	
 private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;

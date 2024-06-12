@@ -98,14 +98,15 @@ void GameScene::Update() {
 	AdjustEnemyDifficulty();
 	AdjustEnemyAI();
 	
-	int32_t playerHealth = player_->GetHealth(); // プレイヤーのHPを取得
-	int32_t enemyHealth = enemy_->GetHealth(); // 敵のHPを取得
+	
 
 
 
 	// ImGuiの描画開始
 	ImGui::Begin("Window");
 	// プレイヤーの情報を表示
+	int32_t playerHealth = player_->GetHealth(); // プレイヤーのHPを取得
+	int32_t enemyHealth = enemy_->GetHealth(); // 敵のHPを取得
 	ImGui::SliderInt("Player Health", &playerHealth,0,100);
 	player_->SetHealth(playerHealth);
 	if (ImGui::TreeNode("Enemy")) {
@@ -288,4 +289,24 @@ void GameScene::AdjustEnemyAI() {
 		level = 0;
 		enemy_->SetAILevel(level);
 	}
+}
+// プレイヤーと敵の距離から敵の速度を計算する関数
+Vector3 GameScene:: calculateEnemySpeed(const Vector3& playerPos, const Vector3& enemyPos) {
+	// 敵の最大速度と最小速度を設定
+	float maxSpeed = 10.0f;
+	float minSpeed = 1.0f;
+
+	// プレイヤーと敵の距離を計算
+	float dx = enemyPos.x - playerPos.x;
+	float dy = enemyPos.y - playerPos.y;
+	float dz = enemyPos.z - playerPos.z;
+	float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+
+	// 距離に応じて敵の速度を計算
+	float speed = maxSpeed - (maxSpeed - minSpeed) * (distance / 100.0f); // 100は適当な基準距離
+
+	// 速度ベクトルを正規化して方向を保ちつつ速度を設定
+	float factor = speed / distance;
+	Vector3 velocity = { dx * factor, dy * factor, dz * factor };
+	return velocity;
 }
