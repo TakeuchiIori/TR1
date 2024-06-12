@@ -9,6 +9,7 @@
 #include <cassert>
 #include <list>
 #include <chrono>
+#include <ctime>
 using namespace std;
 using namespace std::numbers;
 class Enemy;
@@ -86,6 +87,7 @@ public: // アクセッサ
     float Setradius() { return rad; }
     float GetSpeed() { return kCharacterSpeed; }
     bool GetisHeal() { return heal; }
+    float GettimeUntilNextShoot() { return timeUntilNextShoot; }
 private: // メンバ関数
     /// <summary>
     /// 攻撃
@@ -118,8 +120,12 @@ private: // メンバ変数
     float kCharacterSpeed;
     float healCooldown_ = 5.0f;
     float  healInterval_ = 1.0f;
+    float timeUntilNextShoot;
     bool heal = false;
+    bool isHealCounting_ = false;
     // 発射間隔計測用の変数
     float shootInterval_ = 0.0f;
-    std::chrono::steady_clock::time_point lastShootTime_ = std::chrono::steady_clock::now();
+   time_t lastShootTime_  = 0;
+    // 次の発射時刻
+    time_t nextShootTime_ = 0; 
 };

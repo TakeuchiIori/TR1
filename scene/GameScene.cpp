@@ -109,10 +109,12 @@ void GameScene::Update() {
 	// プレイヤー情報の表示
 	if (ImGui::TreeNode("Player")) {
 		ImGui::SliderInt("Health", &playerHealth, 0, 100);
-		ImGui::Text("HealTimer: %d", player_->GetisHeal());
+		ImGui::Text("ShootInterval: %f", -player_->GettimeUntilNextShoot() );
 		player_->SetHealth(playerHealth);
 		ImGui::Text("Attack Power: %d", player_->GetAttackPower());
 		ImGui::Text("Speed: %f", player_->GetSpeed());
+		ImGui::Text("pressureLine: %f", pressureLine);
+		ImGui::Text("recoveryLine: %f", recoveryLine);
 		// 他のプレイヤー関連の情報をここに追加することもできます
 		ImGui::TreePop();
 	}
@@ -256,21 +258,21 @@ void GameScene::CheackAllCollisions() {
 }
 
 void GameScene::AdjustEnemyDifficulty() {
-	if (player_ == nullptr || enemy_ == nullptr) return;
+	//if (player_ == nullptr || enemy_ == nullptr) return;
 
-	int32_t playerHealth = player_->GetHealth(); // プレイヤーのHPを取得
+	//int32_t playerHealth = player_->GetHealth(); // プレイヤーのHPを取得
 
-	int32_t pressureLineHP = 70;
-	int32_t recovery = 50;
-	//int32_t enemyHealth = enemy_->GetHealth(); // 敵のHPを取得
+	//int32_t pressureLineHP = 70;
+	//int32_t recovery = 50;
+	////int32_t enemyHealth = enemy_->GetHealth(); // 敵のHPを取得
 
-	if (playerHealth > pressureLineHP) {
-		// プレイヤーのHPが75以上の場合、敵の強さを増加
-		
-	}
-	else if (playerHealth > recovery) {
-		
-	}
+	//if (playerHealth > pressureLineHP) {
+	//	// プレイヤーのHPが75以上の場合、敵の強さを増加
+	//	
+	//}
+	//else if (playerHealth > recovery) {
+	//	
+	//}
 }
 
 void GameScene::AdjustEnemyAI() {
@@ -279,15 +281,20 @@ void GameScene::AdjustEnemyAI() {
 	std::vector<float> weights = { 0.4f, 0.3f, 0.2f, 0.4f, 0.3f, 0.2f };
 	// パラメーターを重み付けして合計
 	pressureLine = weightedSum(player_, enemy_, weights);
-	recoveryLine = weightedSum(player_, enemy_, weights);
-	int32_t playerHealth = player_->GetHealth();
-	if (playerHealth > pressureLine) {
+	recoveryLine = weightedSum(player_, enemy_, weights) / 2;
+	//int32_t playerHealth = player_->GetHealth();
+	if (player_->GetHealth() > pressureLine) {
 		level = 3;
 		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 1.5));
 		enemy_->SetAILevel(level);
 	}
-	else if (playerHealth > recoveryLine){
+	if (player_->GetHealth() < pressureLine && player_->GetHealth() > recoveryLine) {
 		level = 2;
+		enemy_->SetAttackPower(enemy_->GetBaseAttackPower());
+		enemy_->SetAILevel(level);
+	}
+	if (player_->GetHealth() < recoveryLine) {
+		level = 1;
 		enemy_->SetAttackPower(enemy_->GetBaseAttackPower());
 		enemy_->SetAILevel(level);
 	}
