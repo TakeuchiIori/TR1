@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Enemy.h"
+
 #define NOMINMAX
 Player::Player() {}
 
@@ -47,6 +48,24 @@ void Player::TakeDamage(int damage)
 	if (health_ <= 0) {
 		health_ = 0;
 	}
+	lastDamageTime_ = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now().time_since_epoch()).count(); // ダメージを受けた時刻を記録
+}
+void Player::Heal() {
+	const int kHealAmount = 10;
+	const int kMaxHealth = 100;
+	auto currentTime = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+	auto timeSinceLastDamage = currentTime - lastDamageTime_;
+
+	// 最後にダメージを受けてから healCooldown_ 秒経過した場合に回復を開始
+	if (timeSinceLastDamage >= healCooldown_) {
+		if (timeSinceLastDamage % static_cast<int>(healInterval_) == 0) {
+			health_ += kHealAmount;
+			if (health_ > kMaxHealth) {
+				health_ = kMaxHealth;
+			}
+			lastDamageTime_ = currentTime; // 回復した時刻を更新
+		}
+	}
 }
 void Player::OnCollision() {
 	HitPlayer += 1.0f;
@@ -54,7 +73,11 @@ void Player::OnCollision() {
 }
 
 void Player::Attack() {
-	if (input_->TriggerKey(DIK_SPACE)) {
+	// 現在の時間を取得
+	auto currentTime = std::chrono::steady_clock::now();
+	// 前回の発射からの経過時間を計算（秒単位）
+	float elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastShootTime_).count() / 1000.0f;
+	if (input_->TriggerKey(DIK_SPACE) && elapsedTime >= shootInterval_) {
 		
 		// 弾の速度
 		const float kBulletSpeed = 1.0f;
@@ -67,6 +90,8 @@ void Player::Attack() {
 		newBullet->Initialize(model_, worldTransform_.translation_,velocity);
 		// 弾を登録する
 		bullets_.push_back(newBullet);
+		// 最後の発射時刻を更新
+		lastShootTime_ = currentTime;
 	}
 
 }
@@ -96,7 +121,7 @@ void Player::Update() {
 	// キャラクターの移動ベクトル
 	Vector3 move = {0.0f, 0.0f, 0.0f};
 	// キャラクターの速さ
-	const float kCharacterSpeed = 0.2f;
+	kCharacterSpeed = 0.3f;
 	// 押した方向で移動ベクトルを変更　（左右）
 	if (input_->PushKey(DIK_A)) {
 		move.x -= kCharacterSpeed;
@@ -130,6 +155,7 @@ void Player::Update() {
 	worldTransform_.matWorld_ = moveMatrix;
 	// 行列を定数バッファに転送
 	worldTransform_.Update();
+	Heal();
 	// ImGui
 	/*ImGui::Begin("Window");
 	ImGui::SliderFloat3("translate.x", &worldTransform_.translation_.x,-50.0f,50.0f);

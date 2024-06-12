@@ -54,6 +54,15 @@ struct Vector3 final {
 		}
 		return *this;
 	}
+	float distance(const Vector3& other) const {
+		return std::sqrt((x - other.x) * (x - other.x) +
+			(y - other.y) * (y - other.y) +
+			(z - other.z) * (z - other.z));
+	}
+	Vector3 normalize() const {
+		float length = std::sqrt(x * x + y * y + z * z);
+		return Vector3(x / length, y / length, z / length);
+	}
 };
 
 //// Vector3同士の足し算を行う関数

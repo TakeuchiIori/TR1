@@ -88,7 +88,7 @@ Vector3 normalize(const Vector3& v) {
 	return {v.x / mag, v.y / mag, v.z / mag};
 }
 // ベクトル間の距離を計算する関数
-float Distance(const Vector3& a, const Vector3& b) {
+float Length(const Vector3& a, const Vector3& b) {
 	float dx = b.x - a.x;
 	float dy = b.y - a.y;
 	float dz = b.z - a.z;
@@ -480,4 +480,15 @@ Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m) {
 		v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2]};
 	return result;
 
-}
+}int MatrixSum(const std::vector<std::vector<int>>& matrix) {
+	int sum = 0;
+	for (const auto& row : matrix) {
+		for (int value : row) {
+			sum += value;
+		}
+	}
+	return sum;
+}// パラメーターを持つクラス
+
+
+

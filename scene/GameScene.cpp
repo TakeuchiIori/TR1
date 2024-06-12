@@ -95,11 +95,10 @@ void GameScene::Update() {
 	CheackAllCollisions();
 	skydome_->Update();
 	// 敵の難易度を調整する関数
-	AdjustEnemyDifficulty();
 	AdjustEnemyAI();
 	
 	
-
+	
 
 
 	// ImGuiの描画開始
@@ -107,24 +106,32 @@ void GameScene::Update() {
 	// プレイヤーの情報を表示
 	int32_t playerHealth = player_->GetHealth(); // プレイヤーのHPを取得
 	int32_t enemyHealth = enemy_->GetHealth(); // 敵のHPを取得
-	ImGui::SliderInt("Player Health", &playerHealth,0,100);
-	player_->SetHealth(playerHealth);
+	// プレイヤー情報の表示
+	if (ImGui::TreeNode("Player")) {
+		ImGui::SliderInt("Health", &playerHealth, 0, 100);
+		ImGui::Text("HealTimer: %d", player_->GetisHeal());
+		player_->SetHealth(playerHealth);
+		ImGui::Text("Attack Power: %d", player_->GetAttackPower());
+		ImGui::Text("Speed: %f", player_->GetSpeed());
+		// 他のプレイヤー関連の情報をここに追加することもできます
+		ImGui::TreePop();
+	}
+	// 敵情報の表示
 	if (ImGui::TreeNode("Enemy")) {
-		// 敵の情報を表示
 		if (enemy_) {
 			ImGui::Text("AI Level : %d", level);
-			ImGui::SliderInt("Enemy Health ", &enemyHealth,0,100);
+			ImGui::SliderInt("Enemy Health", &enemyHealth, 0, 100);
 			enemy_->SetHealth(enemyHealth);
 			ImGui::Text("Enemy Attack Power: %d", enemy_->GetAttackPower());
-			ImGui::Text("EnemySpeed : % f", enemy_->GetkLeaveSpeed().x);
-			ImGui::Text("HitEnemy : %f", enemy_->GetHitEnemy());
-			ImGui::Text("DeathTimer : %d", enemy_->GetEnemyDeathTimer());
+			ImGui::Text("Enemy Speed: %f", enemy_->GetkLeaveSpeed().x);
+			ImGui::Text("Hit Enemy: %f", enemy_->GetHitEnemy());
+			ImGui::Text("Death Timer: %d", enemy_->GetEnemyDeathTimer());
+			ImGui::Text("Result: %f", recoveryLine);
 		}
 		ImGui::TreePop();
 	}
-	ImGui::End();
-
 	// ImGuiの描画終了
+	ImGui::End();
 	ImGui::Render();
 	
 }
@@ -252,54 +259,49 @@ void GameScene::AdjustEnemyDifficulty() {
 	if (player_ == nullptr || enemy_ == nullptr) return;
 
 	int32_t playerHealth = player_->GetHealth(); // プレイヤーのHPを取得
+
+	int32_t pressureLineHP = 70;
+	int32_t recovery = 50;
 	//int32_t enemyHealth = enemy_->GetHealth(); // 敵のHPを取得
 
-	if (playerHealth > 75) {
+	if (playerHealth > pressureLineHP) {
 		// プレイヤーのHPが75以上の場合、敵の強さを増加
-		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 1.5));
+		
 	}
-	else if (playerHealth > 50) {
-		enemy_->SetAttackPower(enemy_->GetBaseAttackPower());
-	}
-	else if (playerHealth > 30) {
-		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 0.75));
-	}
-	else {
-		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 0.5));
+	else if (playerHealth > recovery) {
+		
 	}
 }
 
 void GameScene::AdjustEnemyAI() {
 	if (!player_ || !enemy_) return;
-
+	// 重みの定義
+	std::vector<float> weights = { 0.4f, 0.3f, 0.2f, 0.4f, 0.3f, 0.2f };
+	// パラメーターを重み付けして合計
+	pressureLine = weightedSum(player_, enemy_, weights);
+	recoveryLine = weightedSum(player_, enemy_, weights);
 	int32_t playerHealth = player_->GetHealth();
-	if (playerHealth > 75) {
+	if (playerHealth > pressureLine) {
 		level = 3;
+		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 1.5));
 		enemy_->SetAILevel(level);
 	}
-	else if (playerHealth > 50) {
+	else if (playerHealth > recoveryLine){
 		level = 2;
-		enemy_->SetAILevel(level);
-	}
-	else if (playerHealth > 30) {
-		level = 1;
-		enemy_->SetAILevel(level);
-	}
-	else {
-		level = 0;
+		enemy_->SetAttackPower(enemy_->GetBaseAttackPower());
 		enemy_->SetAILevel(level);
 	}
 }
 // プレイヤーと敵の距離から敵の速度を計算する関数
 Vector3 GameScene:: calculateEnemySpeed(const Vector3& playerPos, const Vector3& enemyPos) {
 	// 敵の最大速度と最小速度を設定
-	float maxSpeed = 10.0f;
-	float minSpeed = 1.0f;
+	float maxSpeed = 0.5f;
+	float minSpeed = 0.1f;
 
 	// プレイヤーと敵の距離を計算
-	float dx = enemyPos.x - playerPos.x;
-	float dy = enemyPos.y - playerPos.y;
-	float dz = enemyPos.z - playerPos.z;
+	float dx = playerPos.x - enemyPos.x;
+	float dy = playerPos.y - enemyPos.y;
+	float dz = playerPos.z - enemyPos.z;
 	float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
 
 	// 距離に応じて敵の速度を計算
@@ -309,4 +311,15 @@ Vector3 GameScene:: calculateEnemySpeed(const Vector3& playerPos, const Vector3&
 	float factor = speed / distance;
 	Vector3 velocity = { dx * factor, dy * factor, dz * factor };
 	return velocity;
+}
+// パラメーターを重み付けして合計する関数
+float GameScene::weightedSum(Player* player, Enemy* enemy, const std::vector<float>& weights) {
+	float sum = 0.0f;
+	sum += player->GetHealth() * weights[0];
+	sum += player->GetAttackPower() * weights[1];
+	sum += player->GetSpeed() * weights[2];
+	sum += enemy->GetHealth() * weights[3];
+	sum += enemy->GetAttackPower() * weights[4];
+	sum += ((enemy->GetkLeaveSpeed().x  + enemy->GetkLeaveSpeed().y + enemy->GetkLeaveSpeed().z) * weights[5]) / 3 ;
+	return sum;
 }

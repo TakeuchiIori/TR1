@@ -77,18 +77,22 @@ public:
 	/// </summary>
 	void Draw(ViewProjection& viewProjection);
 
-	void SetPlayer(Player* player) { player_ = player; }
+	Vector3 calculateEnemySpeed(const Vector3& playerPos, const Vector3& enemyPos);
 
-	// 弾リスト取得
-	const list<EnemyBullet*>& GetBullets() const { return bullets_; }
-
-	// ワールド座標を取得
-	Vector3 GetWorldPosition();
+	Vector3 calculateEnemyMovement(const Vector3& playerPos, const Vector3& enemyPos);
+	
 
 	
 
-	void TakeDamage(int damage);
+	
 public: // アクセッサ
+
+	void TakeDamage(int damage);
+	void SetPlayer(Player* player) { player_ = player; }
+	// 弾リスト取得
+	const list<EnemyBullet*>& GetBullets() const { return bullets_; }
+	// ワールド座標を取得
+	Vector3 GetWorldPosition();
 	void SetHealth(int32_t health);
 	void SetAttackPower(int32_t power);
 	void SetLeaveSpeed(Vector3 speed);
@@ -132,6 +136,7 @@ private:
 	float hitEnemy = 0.0f;
 	float kBulletSpeed;
 	float attackTimer_;
+	;
 	// 敵のステータス
 
 	int32_t baseAttackPower_;

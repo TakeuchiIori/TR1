@@ -66,3 +66,5 @@ Matrix4x4 MakeRotateMatrixZ(float radian);
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);
 //ベクトル変換データ
 Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m);
+// 行列の総和
+int MatrixSum(const std::vector<std::vector<int>>& matrix);

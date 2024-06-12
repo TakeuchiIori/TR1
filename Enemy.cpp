@@ -10,10 +10,7 @@ Enemy::~Enemy() {
     }
 }
 
-void (Enemy::* Enemy::phaseEnemy[])() = {
-    &Enemy::Approch,
-    &Enemy::Leave
-};
+
 
 void Enemy::Initialize(Model* model) {
     // NULLポインタチェック
@@ -21,12 +18,45 @@ void Enemy::Initialize(Model* model) {
     model_ = model;
     textureHandle_ = TextureManager::Load("./Resources/Enemy/enemy.png");
     worldTransform_.Initialize();
-    worldTransform_.translation_ = { 0.0f, -5.0f, 20.0f };
+    worldTransform_.translation_ = { 0.0f, -5.0f, 50.0f };
     health_ = 100;
     movingRight_ = true;  // 初期化
     // 接近フェーズ
     InitApproch();
 }
+void Enemy::Update() {
+    EnemyBulletDelete();
+    // メンバ関数ポインタの呼び出し
+    (this->*phaseEnemy[static_cast<size_t>(phase_)])();
+
+    // 弾の更新
+    for (EnemyBullet* bullet : bullets_) {
+        bullet->Update();
+    }
+    EnemyTimer();
+    // アフィン変換行列の計算
+    Matrix4x4 moveMatrix = MakeAffineMatrix(worldTransform_.scale_, worldTransform_.rotation_, worldTransform_.translation_);
+    // ワールド行列に代入
+    worldTransform_.matWorld_ = moveMatrix;
+    // 行列を定数バッファに転送
+    worldTransform_.Update();
+    // ImGuiの描画開始
+
+}
+void Enemy::Draw(ViewProjection& viewProjection) {
+    // 3Dモデル
+    if (isDraw_) {
+        model_->Draw(worldTransform_, viewProjection, textureHandle_);
+    }
+    for (EnemyBullet* bullet : bullets_) {
+        bullet->Draw(viewProjection);
+    }
+}
+
+void (Enemy::* Enemy::phaseEnemy[])() = {
+    &Enemy::Approch,
+    &Enemy::Leave
+};
 
 void Enemy::InitApproch() {
     // 発射タイマーを初期化
@@ -42,7 +72,7 @@ void Enemy::Approch() {
     // 移動（ベクトルを加算）
     worldTransform_.translation_ += kApprochSpeed;
 
-    if (worldTransform_.translation_.z < 0.0f) {
+    if (worldTransform_.translation_.z < 40.0f) {
         phase_ = Phase::Leave;
     }
 }
@@ -61,9 +91,13 @@ void Enemy::Leave() {
     // 移動（ベクトルを加算）
     if (movingRight_) {
         worldTransform_.translation_.x += kLeaveSpeed.x;
+        worldTransform_.translation_.y += kLeaveSpeed.y;
+        worldTransform_.translation_.z += kLeaveSpeed.z;
     }
     else {
         worldTransform_.translation_.x -= kLeaveSpeed.x;
+        worldTransform_.translation_.y -= kLeaveSpeed.y;
+        worldTransform_.translation_.z -= kLeaveSpeed.z;
     }
 
     // 端に到達したら移動方向を反転
@@ -121,24 +155,14 @@ void Enemy::SetHealth(int32_t health) {
 void Enemy::SetAILevel(int32_t level) {
     aiLevel_ = level;
     if (level == 3) {
-        kLeaveSpeed.x = 0.3f;
-        kBulletSpeed = 2.0f;
+        kLeaveSpeed = calculateEnemySpeed(player_->GetWroldPosition(), GetWorldPosition());
+        kBulletSpeed = 1.0f;
         kFireInterval = 30;
     }
     else if (level == 2) {
-        kLeaveSpeed.x = 0.2f;
-        kBulletSpeed = 1.0f;
-        kFireInterval = 45;
-    }
-    else if (level == 1) {
-        kLeaveSpeed.x = 0.1f;
+        kLeaveSpeed = calculateEnemyMovement(player_->GetWroldPosition(), GetWorldPosition());
         kBulletSpeed = 0.5f;
-        kFireInterval = 60;
-    }
-    else if (level == 0) {
-        kLeaveSpeed.x = 0.0f;
-        kBulletSpeed = 0.25f;
-        kFireInterval = 75;
+        kFireInterval = 45;
     }
 }
 
@@ -166,25 +190,7 @@ void Enemy::OnCollision() {
     TakeDamage(player_->GetAttackPower());
 }
 
-void Enemy::Update() {
-    EnemyBulletDelete();
-    // メンバ関数ポインタの呼び出し
-    (this->*phaseEnemy[static_cast<size_t>(phase_)])();
 
-    // 弾の更新
-    for (EnemyBullet* bullet : bullets_) {
-        bullet->Update();
-    }
-    EnemyTimer();
-    // アフィン変換行列の計算
-    Matrix4x4 moveMatrix = MakeAffineMatrix(worldTransform_.scale_, worldTransform_.rotation_, worldTransform_.translation_);
-    // ワールド行列に代入
-    worldTransform_.matWorld_ = moveMatrix;
-    // 行列を定数バッファに転送
-    worldTransform_.Update();
-    // ImGuiの描画開始
-
-}
 
 void Enemy::EnemyBulletDelete()
 {
@@ -210,13 +216,49 @@ void Enemy::EnemyTimer()
         isAlive_ = 0;
     }
 }
+Vector3 Enemy::calculateEnemySpeed(const Vector3& playerPos, const Vector3& enemyPos)
+{
+    // 敵の最大速度と最小速度を設定
+    float maxSpeed = 0.5f;
+    float minSpeed = 0.1f;
 
-void Enemy::Draw(ViewProjection& viewProjection) {
-    // 3Dモデル
-    if (isDraw_) {
-        model_->Draw(worldTransform_, viewProjection, textureHandle_);
+    // プレイヤーと敵の距離を計算
+    float dx = playerPos.x - enemyPos.x;
+    float dy = playerPos.y - enemyPos.y;
+    float dz = playerPos.z - enemyPos.z;
+    float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+
+    // 距離に応じて敵の速度を計算
+    float speed = maxSpeed - (maxSpeed - minSpeed) * (distance / 100.0f); // 100は適当な基準距離
+    // プレイヤーとの距離が一定以下の場合、Z値の速度を0にする
+    const float minDistance = 30.0f; // この値は適宜変更してください
+    if (distance <= minDistance) {
+        dz = 0.0f;
     }
-    for (EnemyBullet* bullet : bullets_) {
-        bullet->Draw(viewProjection);
+    // 速度ベクトルを正規化して方向を保ちつつ速度を設定
+    float factor = speed / distance;
+    Vector3 velocity = { dx * factor, dy * factor, dz * factor };
+    return velocity;
+}
+
+Vector3 Enemy::calculateEnemyMovement(const Vector3& playerPos, const Vector3& enemyPos) {
+    float detectionRange = 100.0f; // プレイヤーを検知する範囲
+    float shortChaseDistance = 1.0f; // 1フレームでの最大移動距離
+    Vector3 movement;
+
+    float distanceToPlayer = enemyPos.distance(playerPos);
+    if (distanceToPlayer < detectionRange) {
+        // プレイヤーを見つけた場合、プレイヤーに向かって移動
+        Vector3 direction = (playerPos - enemyPos).normalize();
+        movement = { direction.x * shortChaseDistance, direction.y * shortChaseDistance, direction.z * shortChaseDistance };
     }
+    else {
+        // プレイヤーが検知範囲外にいる場合はランダムに動く
+        float randomX = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX / 2)) - 1.0f;
+        float randomY = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX / 2)) - 1.0f;
+        float randomZ = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX / 2)) - 1.0f;
+        movement = { randomX * 0.1f, randomY * 0.1f, randomZ * 0.1f };
+    }
+
+    return movement;
 }

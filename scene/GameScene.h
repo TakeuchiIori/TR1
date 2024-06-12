@@ -50,6 +50,8 @@ public: // メンバ関数
 	void Draw();
 
 	Vector3 calculateEnemySpeed(const Vector3& playerPos, const Vector3& enemyPos);
+
+	float weightedSum(Player* player, Enemy* enemy, const std::vector<float>& weights);
 	
 private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
@@ -80,4 +82,6 @@ private: // メンバ変数
 	float enemySpawnRate_;
 	float powerUpSpawnRate_;
 	int32_t level;
+	float pressureLine;
+	float recoveryLine;
 };
