@@ -52,7 +52,7 @@ public: // メンバ関数
 	Vector3 calculateEnemySpeed(const Vector3& playerPos, const Vector3& enemyPos);
 
 	float weightedSum(Player* player, Enemy* enemy, const std::vector<float>& weights);
-	
+	float weightedSumAndAverage(Player* player, Enemy* enemy, const std::vector<float>& weights, int& numParams);
 private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
 	Input* input_ = nullptr;

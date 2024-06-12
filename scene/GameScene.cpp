@@ -329,4 +329,23 @@ float GameScene::weightedSum(Player* player, Enemy* enemy, const std::vector<flo
 	sum += enemy->GetAttackPower() * weights[4];
 	sum += ((enemy->GetkLeaveSpeed().x  + enemy->GetkLeaveSpeed().y + enemy->GetkLeaveSpeed().z) * weights[5]) / 3 ;
 	return sum;
+
+}
+// 平均
+float GameScene::weightedSumAndAverage(Player* player, Enemy* enemy, const std::vector<float>& weights, int& numParams) {
+	float sum = 0.0f;
+	sum += player->GetHealth() * weights[0];
+	sum += player->GetAttackPower() * weights[1];
+	sum += player->GetSpeed() * weights[2];
+	sum += enemy->GetHealth() * weights[3];
+	sum += enemy->GetAttackPower() * weights[4];
+	sum += ((enemy->GetkLeaveSpeed().x + enemy->GetkLeaveSpeed().y + enemy->GetkLeaveSpeed().z) * weights[5]) / 3;
+
+	// パラメーターの数を更新
+	numParams = 6;
+
+	// 合計をパラメーターの数で割って平均値を計算
+	float average = sum / numParams;
+
+	return average;
 }
