@@ -52,7 +52,7 @@ public: // メンバ関数
 	Vector3 calculateEnemySpeed(const Vector3& playerPos, const Vector3& enemyPos);
 
 	float weightedSum(Player* player, Enemy* enemy, const std::vector<float>& weights);
-	float weightedSumAndAverage(Player* player, Enemy* enemy, const std::vector<float>& weights, int& numParams);
+	float weightedSumAndAverage(Player* player, Enemy* enemy, const std::vector<float>& weights);
 private: // メンバ変数
 	DirectXCommon* dxCommon_ = nullptr;
 	Input* input_ = nullptr;
@@ -84,4 +84,5 @@ private: // メンバ変数
 	int32_t level;
 	float pressureLine;
 	float recoveryLine;
+	float average_;
 };

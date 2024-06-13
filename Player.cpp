@@ -41,7 +41,7 @@ void Player::Update() {
 	// キャラクターの移動ベクトル
 	Vector3 move = { 0.0f, 0.0f, 0.0f };
 	// キャラクターの速さ
-	kCharacterSpeed = 0.3f;
+	
 	// 押した方向で移動ベクトルを変更　（左右）
 	if (input_->PushKey(DIK_A)) {
 		move.x -= kCharacterSpeed;
@@ -138,11 +138,15 @@ void Player::Heal() {
 }
 void Player::OnCollision() {
 	HitPlayer += 1.0f;
+	if (HitPlayer > 5.0f) {
+		kCharacterSpeed *= 1.25f;
+		HitPlayer = 0.0f;
+	}
 	TakeDamage(enemy_->GetAttackPower());
 }
 
 void Player::Attack() {
-    // 現在の時間を取得
+	// 現在の時間を取得
 	time_t currentTime = time(nullptr);
 
 	// 次の発射までの経過時間を計算（秒単位）
@@ -169,6 +173,14 @@ void Player::Attack() {
 
 		// 最後の発射時刻も更新
 		lastShootTime_ = currentTime;
+	}
+
+	if (timeUntilNextShoot <= -7) {
+		isPenaltyActive_ = true;
+		timeUntilNextShoot = 0;
+	}
+	else {
+		isPenaltyActive_ = false;
 	}
 }
 

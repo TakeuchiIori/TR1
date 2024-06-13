@@ -25,32 +25,46 @@ void Enemy::Initialize(Model* model) {
     InitApproch();
 }
 void Enemy::Update() {
-    EnemyBulletDelete();
-    // メンバ関数ポインタの呼び出し
-    (this->*phaseEnemy[static_cast<size_t>(phase_)])();
 
-    // 弾の更新
-    for (EnemyBullet* bullet : bullets_) {
-        bullet->Update();
+        EnemyBulletDelete();
+        // メンバ関数ポインタの呼び出し
+        (this->*phaseEnemy[static_cast<size_t>(phase_)])();
+
+        // 弾の更新
+        for (EnemyBullet* bullet : bullets_) {
+            bullet->Update();
+        }
+        EnemyTimer();
+        if (player_->GetisPenaltyActive_() && !wasPenaltyApplied_) {
+            if (health_ < 100) {
+                health_ += 10;
+            }
+            attackPower_ += 2;
+            wasPenaltyApplied_ = true; // 一度だけ回復
+        }
+        else if (!player_->GetisPenaltyActive_()) {
+            wasPenaltyApplied_ = false; // ペナルティが解除されたらフラグをリセット
+        }
+
+        // アフィン変換行列の計算
+        Matrix4x4 moveMatrix = MakeAffineMatrix(worldTransform_.scale_, worldTransform_.rotation_, worldTransform_.translation_);
+        // ワールド行列に代入
+        worldTransform_.matWorld_ = moveMatrix;
+        // 行列を定数バッファに転送
+        worldTransform_.Update();
+        // ImGuiの描画開始
     }
-    EnemyTimer();
-    // アフィン変換行列の計算
-    Matrix4x4 moveMatrix = MakeAffineMatrix(worldTransform_.scale_, worldTransform_.rotation_, worldTransform_.translation_);
-    // ワールド行列に代入
-    worldTransform_.matWorld_ = moveMatrix;
-    // 行列を定数バッファに転送
-    worldTransform_.Update();
-    // ImGuiの描画開始
 
-}
+
 void Enemy::Draw(ViewProjection& viewProjection) {
-    // 3Dモデル
-    if (isDraw_) {
-        model_->Draw(worldTransform_, viewProjection, textureHandle_);
-    }
-    for (EnemyBullet* bullet : bullets_) {
-        bullet->Draw(viewProjection);
-    }
+   // 3Dモデル
+   if (isDraw_) {
+       model_->Draw(worldTransform_, viewProjection, textureHandle_);
+   }
+   for (EnemyBullet* bullet : bullets_) {
+       bullet->Draw(viewProjection);
+   }
+    
 }
 
 void (Enemy::* Enemy::phaseEnemy[])() = {
@@ -160,12 +174,12 @@ void Enemy::SetAILevel(int32_t level) {
         kFireInterval = 30;
     }
     if (level == 2) {
-        kLeaveSpeed = calculateEnemyMovement(player_->GetWroldPosition(), GetWorldPosition());
+        kLeaveSpeed = calculateEnemyMovement(player_->GetWroldPosition(), GetWorldPosition(),0.9f);
         kBulletSpeed = 0.75f;
         kFireInterval = 40;
     }
     if (level == 1) {
-        kLeaveSpeed = calculateEnemyMovementAI1(player_->GetWroldPosition(), GetWorldPosition());
+        kLeaveSpeed = calculateEnemyMovement(player_->GetWroldPosition(), GetWorldPosition(), 0.8f);
         kBulletSpeed = 0.50f;
         kFireInterval = 45;
     }
@@ -213,12 +227,12 @@ void Enemy::EnemyTimer()
 {
     //-------- 敵の復活 -------//
     if (!isDraw_) {
-        isAlive_++;
+        Alive_++;
     }
-    if (isAlive_ == 60) {
+    if (Alive_ == 60) {
         isDraw_ = true;
         health_ = 100;
-        isAlive_ = 0;
+        Alive_ = 0;
     }
 }
 Vector3 Enemy::calculateEnemySpeed(const Vector3& playerPos, const Vector3& enemyPos)
@@ -246,7 +260,7 @@ Vector3 Enemy::calculateEnemySpeed(const Vector3& playerPos, const Vector3& enem
     return velocity;
 }
 
-Vector3 Enemy::calculateEnemyMovement(const Vector3& playerPos, const Vector3& enemyPos) {
+Vector3 Enemy::calculateEnemyMovement(const Vector3& playerPos, const Vector3& enemyPos,float val) {
     // 敵の最大速度と最小速度を設定
     float maxSpeed = 0.5f;
     float minSpeed = 0.1f;
@@ -261,7 +275,7 @@ Vector3 Enemy::calculateEnemyMovement(const Vector3& playerPos, const Vector3& e
     float speed = maxSpeed - (maxSpeed - minSpeed) * (distance / 100.0f); // 100は適当な基準距離
     
     // 敵がプレイヤーにくっつかないように、速度を少し低めに設定します
-    speed *= 0.9f;
+    speed *= val;
     
     // プレイヤーとの距離が一定以下の場合、Z値の速度を0にする
     const float minDistance = 40.0f; // この値は適宜変更してください
@@ -269,33 +283,6 @@ Vector3 Enemy::calculateEnemyMovement(const Vector3& playerPos, const Vector3& e
         dz = 0.0f;
     }
     
-    // 速度ベクトルを正規化して方向を保ちつつ速度を設定
-    float factor = speed / distance;
-    Vector3 velocity = { dx * factor, dy * factor, dz * factor };
-    return velocity;
-}Vector3 Enemy::calculateEnemyMovementAI1(const Vector3& playerPos, const Vector3& enemyPos){
-    // 敵の最大速度と最小速度を設定
-    float maxSpeed = 0.5f;
-    float minSpeed = 0.1f;
-
-    // プレイヤーと敵の距離を計算
-    float dx = playerPos.x - enemyPos.x;
-    float dy = playerPos.y - enemyPos.y;
-    float dz = playerPos.z - enemyPos.z;
-    float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
-
-    // 距離に応じて敵の速度を計算
-    float speed = maxSpeed - (maxSpeed - minSpeed) * (distance / 100.0f); // 100は適当な基準距離
-
-    // 敵がプレイヤーにびたびたにくっつかないように、速度を少し低めに設定します
-    speed *= 0.8f;
-
-    // プレイヤーとの距離が一定以下の場合、Z値の速度を0にする
-    const float minDistance = 45.0f; // この値は適宜変更してください
-    if (distance <= minDistance) {
-        dz = 0.0f;
-    }
-
     // 速度ベクトルを正規化して方向を保ちつつ速度を設定
     float factor = speed / distance;
     Vector3 velocity = { dx * factor, dy * factor, dz * factor };

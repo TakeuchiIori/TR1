@@ -79,7 +79,7 @@ public:
 
 	Vector3 calculateEnemySpeed(const Vector3& playerPos, const Vector3& enemyPos);
 
-	Vector3 calculateEnemyMovement(const Vector3& playerPos, const Vector3& enemyPos);
+	Vector3 calculateEnemyMovement(const Vector3& playerPos, const Vector3& enemyPos,float val);
 	
 	Vector3 calculateEnemyMovementAI1(const Vector3& playerPos, const Vector3& enemyPos);
 
@@ -105,7 +105,7 @@ public: // アクセッサ
 	int GetAttackPower() { return attackPower_; }
 	int SetEnemyHrealth(int health) { return this->health_ = health; }
 	int32_t GetBaseAttackPower() const;
-	int32_t GetEnemyDeathTimer() { return isAlive_; }
+	float GetEnemyDeathTimer() { return Alive_; }
 	
 	
 	float Setradius() { return rad; }
@@ -148,12 +148,12 @@ private:
 	int32_t health_;
 	int32_t aiLevel_;
 	
-	int32_t isAlive_ = 0;
+	float Alive_ = 0;
 	bool isDraw_ = true;
 	bool isMove_ = false;
 	// 移動方向を示すフラグを追加
 	bool movingRight_ = true;
-	
+	bool wasPenaltyApplied_ = false;
 private: //メンバ関数ポインタ
 	// 発射タイマー
 	int32_t shotTImer_ = 0;

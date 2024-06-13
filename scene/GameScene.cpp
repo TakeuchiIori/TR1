@@ -64,9 +64,6 @@ void GameScene::Initialize() {
 	// 敵キャラに自キャラのアドレスを渡す
 	enemy_->SetPlayer(player_);
 	player_->SetPlayer(enemy_);
-
-	
-
 }
 
 
@@ -109,12 +106,12 @@ void GameScene::Update() {
 	// プレイヤー情報の表示
 	if (ImGui::TreeNode("Player")) {
 		ImGui::SliderInt("Health", &playerHealth, 0, 100);
-		ImGui::Text("ShootInterval: %f", -player_->GettimeUntilNextShoot() );
+		ImGui::Text("ShootInterval: %0.0f", -player_->GettimeUntilNextShoot() );
 		player_->SetHealth(playerHealth);
 		ImGui::Text("Attack Power: %d", player_->GetAttackPower());
+		ImGui::Text("pressureLine: %0.0f", pressureLine);
+		ImGui::Text("recoveryLine: %0.0f", recoveryLine);
 		ImGui::Text("Speed: %f", player_->GetSpeed());
-		ImGui::Text("pressureLine: %f", pressureLine);
-		ImGui::Text("recoveryLine: %f", recoveryLine);
 		// 他のプレイヤー関連の情報をここに追加することもできます
 		ImGui::TreePop();
 	}
@@ -125,10 +122,7 @@ void GameScene::Update() {
 			ImGui::SliderInt("Enemy Health", &enemyHealth, 0, 100);
 			enemy_->SetHealth(enemyHealth);
 			ImGui::Text("Enemy Attack Power: %d", enemy_->GetAttackPower());
-			ImGui::Text("Enemy Speed: %f", enemy_->GetkLeaveSpeed().x);
-			ImGui::Text("Hit Enemy: %f", enemy_->GetHitEnemy());
-			ImGui::Text("Death Timer: %d", enemy_->GetEnemyDeathTimer());
-			ImGui::Text("Result: %f", recoveryLine);
+			ImGui::Text("Hit Enemy: %0.0f", enemy_->GetHitEnemy());
 		}
 		ImGui::TreePop();
 	}
@@ -282,20 +276,19 @@ void GameScene::AdjustEnemyAI() {
 	// パラメーターを重み付けして合計
 	pressureLine = weightedSum(player_, enemy_, weights);
 	recoveryLine = weightedSum(player_, enemy_, weights) / 2;
+	//average_ = (pressureLine + recoveryLine) / 2;
+
 	//int32_t playerHealth = player_->GetHealth();
 	if (player_->GetHealth() > pressureLine) {
 		level = 3;
-		enemy_->SetAttackPower(static_cast<int>(enemy_->GetBaseAttackPower() * 1.5));
 		enemy_->SetAILevel(level);
 	}
 	if (player_->GetHealth() < pressureLine && player_->GetHealth() > recoveryLine) {
 		level = 2;
-		enemy_->SetAttackPower(enemy_->GetBaseAttackPower());
 		enemy_->SetAILevel(level);
 	}
 	if (player_->GetHealth() < recoveryLine) {
 		level = 1;
-		enemy_->SetAttackPower(enemy_->GetBaseAttackPower());
 		enemy_->SetAILevel(level);
 	}
 }
@@ -332,7 +325,7 @@ float GameScene::weightedSum(Player* player, Enemy* enemy, const std::vector<flo
 
 }
 // 平均
-float GameScene::weightedSumAndAverage(Player* player, Enemy* enemy, const std::vector<float>& weights, int& numParams) {
+float GameScene::weightedSumAndAverage(Player* player, Enemy* enemy, const std::vector<float>& weights) {
 	float sum = 0.0f;
 	sum += player->GetHealth() * weights[0];
 	sum += player->GetAttackPower() * weights[1];
@@ -342,7 +335,7 @@ float GameScene::weightedSumAndAverage(Player* player, Enemy* enemy, const std::
 	sum += ((enemy->GetkLeaveSpeed().x + enemy->GetkLeaveSpeed().y + enemy->GetkLeaveSpeed().z) * weights[5]) / 3;
 
 	// パラメーターの数を更新
-	numParams = 6;
+	int numParams = 6;
 
 	// 合計をパラメーターの数で割って平均値を計算
 	float average = sum / numParams;

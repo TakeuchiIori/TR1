@@ -86,8 +86,9 @@ public: // アクセッサ
     int GetAttackPower() { return attackPower_; }
     float Setradius() { return rad; }
     float GetSpeed() { return kCharacterSpeed; }
-    bool GetisHeal() { return heal; }
     float GettimeUntilNextShoot() { return timeUntilNextShoot; }
+    bool GetisHeal() { return heal; }
+    bool GetisPenaltyActive_() { return isPenaltyActive_; }
 private: // メンバ関数
     /// <summary>
     /// 攻撃
@@ -117,12 +118,13 @@ private: // メンバ変数
     const int baseHealth_ = 100;
     const int baseAttackPower_ = 10;
     float HitPlayer = 0.0f;
-    float kCharacterSpeed;
+    float kCharacterSpeed = 0.3f;
     float healCooldown_ = 5.0f;
     float  healInterval_ = 1.0f;
     float timeUntilNextShoot;
     bool heal = false;
     bool isHealCounting_ = false;
+    bool isPenaltyActive_ = false;
     // 発射間隔計測用の変数
     float shootInterval_ = 0.0f;
    time_t lastShootTime_  = 0;
