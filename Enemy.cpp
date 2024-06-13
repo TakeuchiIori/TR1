@@ -155,15 +155,18 @@ void Enemy::SetHealth(int32_t health) {
 void Enemy::SetAILevel(int32_t level) {
     aiLevel_ = level;
     if (level == 3) {
-        kLeaveSpeed = { 0,0,0 };
         kLeaveSpeed = calculateEnemySpeed(player_->GetWroldPosition(), GetWorldPosition());
         kBulletSpeed = 1.0f;
         kFireInterval = 30;
     }
-    else if (level == 2) {
-        kLeaveSpeed = { 0,0,0 };
+    if (level == 2) {
         kLeaveSpeed = calculateEnemyMovement(player_->GetWroldPosition(), GetWorldPosition());
-        kBulletSpeed = 0.5f;
+        kBulletSpeed = 0.75f;
+        kFireInterval = 40;
+    }
+    if (level == 1) {
+        kLeaveSpeed = calculateEnemyMovementAI1(player_->GetWroldPosition(), GetWorldPosition());
+        kBulletSpeed = 0.50f;
         kFireInterval = 45;
     }
 }
@@ -257,15 +260,42 @@ Vector3 Enemy::calculateEnemyMovement(const Vector3& playerPos, const Vector3& e
     // 距離に応じて敵の速度を計算
     float speed = maxSpeed - (maxSpeed - minSpeed) * (distance / 100.0f); // 100は適当な基準距離
     
-    // 敵がプレイヤーにびたびたにくっつかないように、速度を少し低めに設定します
-    speed *= 0.5f;
+    // 敵がプレイヤーにくっつかないように、速度を少し低めに設定します
+    speed *= 0.9f;
     
     // プレイヤーとの距離が一定以下の場合、Z値の速度を0にする
-    const float minDistance = 30.0f; // この値は適宜変更してください
+    const float minDistance = 40.0f; // この値は適宜変更してください
     if (distance <= minDistance) {
         dz = 0.0f;
     }
     
+    // 速度ベクトルを正規化して方向を保ちつつ速度を設定
+    float factor = speed / distance;
+    Vector3 velocity = { dx * factor, dy * factor, dz * factor };
+    return velocity;
+}Vector3 Enemy::calculateEnemyMovementAI1(const Vector3& playerPos, const Vector3& enemyPos){
+    // 敵の最大速度と最小速度を設定
+    float maxSpeed = 0.5f;
+    float minSpeed = 0.1f;
+
+    // プレイヤーと敵の距離を計算
+    float dx = playerPos.x - enemyPos.x;
+    float dy = playerPos.y - enemyPos.y;
+    float dz = playerPos.z - enemyPos.z;
+    float distance = std::sqrt(dx * dx + dy * dy + dz * dz);
+
+    // 距離に応じて敵の速度を計算
+    float speed = maxSpeed - (maxSpeed - minSpeed) * (distance / 100.0f); // 100は適当な基準距離
+
+    // 敵がプレイヤーにびたびたにくっつかないように、速度を少し低めに設定します
+    speed *= 0.8f;
+
+    // プレイヤーとの距離が一定以下の場合、Z値の速度を0にする
+    const float minDistance = 45.0f; // この値は適宜変更してください
+    if (distance <= minDistance) {
+        dz = 0.0f;
+    }
+
     // 速度ベクトルを正規化して方向を保ちつつ速度を設定
     float factor = speed / distance;
     Vector3 velocity = { dx * factor, dy * factor, dz * factor };

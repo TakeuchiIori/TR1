@@ -81,6 +81,7 @@ public:
 
 	Vector3 calculateEnemyMovement(const Vector3& playerPos, const Vector3& enemyPos);
 	
+	Vector3 calculateEnemyMovementAI1(const Vector3& playerPos, const Vector3& enemyPos);
 
 	
 
