@@ -106,7 +106,7 @@ void GameScene::Update() {
 	// プレイヤー情報の表示
 	if (ImGui::TreeNode("Player")) {
 		ImGui::SliderInt("Health", &playerHealth, 0, 100);
-		ImGui::Text("ShootInterval: %0.0f", -player_->GettimeUntilNextShoot() );
+		//ImGui::Text("ShootInterval: %0.0f", -player_->GettimeUntilNextShoot() );
 		player_->SetHealth(playerHealth);
 		ImGui::Text("Attack Power: %d", player_->GetAttackPower());
 		ImGui::Text("pressureLine: %0.0f", pressureLine);
@@ -123,6 +123,7 @@ void GameScene::Update() {
 			enemy_->SetHealth(enemyHealth);
 			ImGui::Text("Enemy Attack Power: %d", enemy_->GetAttackPower());
 			ImGui::Text("Hit Enemy: %0.0f", enemy_->GetHitEnemy());
+			ImGui::Text("FireInterval : %0.0f", enemy_->GetFireInterval());
 		}
 		ImGui::TreePop();
 	}

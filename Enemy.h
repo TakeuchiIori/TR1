@@ -104,10 +104,12 @@ public: // アクセッサ
 	int GetHealth() { return health_; }
 	int GetAttackPower() { return attackPower_; }
 	int SetEnemyHrealth(int health) { return this->health_ = health; }
+
 	int32_t GetBaseAttackPower() const;
+	int32_t GetFireInterval() { return  kFireInterval; }
+
+
 	float GetEnemyDeathTimer() { return Alive_; }
-	
-	
 	float Setradius() { return rad; }
 	float GetHitEnemy() { return hitEnemy; }
 	float GetBulletSpeed() { return kBulletSpeed; }

@@ -250,7 +250,7 @@ Vector3 Enemy::calculateEnemySpeed(const Vector3& playerPos, const Vector3& enem
     // 距離に応じて敵の速度を計算
     float speed = maxSpeed - (maxSpeed - minSpeed) * (distance / 100.0f); // 100は適当な基準距離
     // プレイヤーとの距離が一定以下の場合、Z値の速度を0にする
-    const float minDistance = 30.0f; // この値は適宜変更してください
+    const float minDistance = 30.0f; // この値は適宜変更
     if (distance <= minDistance) {
         dz = 0.0f;
     }
@@ -274,11 +274,11 @@ Vector3 Enemy::calculateEnemyMovement(const Vector3& playerPos, const Vector3& e
     // 距離に応じて敵の速度を計算
     float speed = maxSpeed - (maxSpeed - minSpeed) * (distance / 100.0f); // 100は適当な基準距離
     
-    // 敵がプレイヤーにくっつかないように、速度を少し低めに設定します
+    // 敵がプレイヤーにくっつかないように、速度を少し低めに設定
     speed *= val;
     
     // プレイヤーとの距離が一定以下の場合、Z値の速度を0にする
-    const float minDistance = 40.0f; // この値は適宜変更してください
+    const float minDistance = 40.0f; // この値は適宜変更
     if (distance <= minDistance) {
         dz = 0.0f;
     }
