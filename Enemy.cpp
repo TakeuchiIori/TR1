@@ -170,17 +170,20 @@ void Enemy::SetAILevel(int32_t level) {
     aiLevel_ = level;
     if (level == 3) {
         kLeaveSpeed = calculateEnemySpeed(player_->GetWroldPosition(), GetWorldPosition());
-        kBulletSpeed = 1.0f;
+        kBulletSpeed = 1.8f;
+        attackPower_ = 15;
         kFireInterval = 30;
     }
     if (level == 2) {
         kLeaveSpeed = calculateEnemyMovement(player_->GetWroldPosition(), GetWorldPosition(),0.9f);
-        kBulletSpeed = 0.75f;
+        kBulletSpeed = 1.5f;
+        attackPower_ = 12;
         kFireInterval = 40;
     }
     if (level == 1) {
         kLeaveSpeed = calculateEnemyMovement(player_->GetWroldPosition(), GetWorldPosition(), 0.8f);
-        kBulletSpeed = 0.50f;
+        kBulletSpeed = 1.25f;
+        attackPower_ = 9;
         kFireInterval = 45;
     }
 }
