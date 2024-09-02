@@ -251,23 +251,6 @@ void GameScene::CheackAllCollisions() {
 #pragma endregion
 }
 
-void GameScene::AdjustEnemyDifficulty() {
-	//if (player_ == nullptr || enemy_ == nullptr) return;
-
-	//int32_t playerHealth = player_->GetHealth(); // プレイヤーのHPを取得
-
-	//int32_t pressureLineHP = 70;
-	//int32_t recovery = 50;
-	////int32_t enemyHealth = enemy_->GetHealth(); // 敵のHPを取得
-
-	//if (playerHealth > pressureLineHP) {
-	//	// プレイヤーのHPが75以上の場合、敵の強さを増加
-	//	
-	//}
-	//else if (playerHealth > recovery) {
-	//	
-	//}
-}
 
 void GameScene::AdjustEnemyAI() {
 	if (!player_ || !enemy_) return;

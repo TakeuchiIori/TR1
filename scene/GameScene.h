@@ -36,7 +36,6 @@ public: // メンバ関数
 	/// <summary>
 	/// 敵の難易度調整する関数
 	/// </summary>
-	void AdjustEnemyDifficulty();
 	void AdjustEnemyAI();
 
 	/// <summary>

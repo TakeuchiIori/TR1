@@ -480,7 +480,8 @@ Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m) {
 		v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2]};
 	return result;
 
-}int MatrixSum(const std::vector<std::vector<int>>& matrix) {
+}
+int MatrixSum(const std::vector<std::vector<int>>& matrix) {
 	int sum = 0;
 	for (const auto& row : matrix) {
 		for (int value : row) {
